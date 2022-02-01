@@ -32,3 +32,43 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+- stage: Dev
+  displayName: Deploy to the dev environment
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'windows-latest'
+    environment: dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo Deploy to the DEV environment
+- stage: Test
+  displayName: Deploy to the test environment
+  dependsOn: Dev
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'windows-latest'
+    environment: test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo Deploy to the TEST environment
+- stage: Staging
+  displayName: Deploy to the staging environment
+  dependsOn: Test
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'windows-latest'
+    environment: staging
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo Deploy to the STAGING environment
