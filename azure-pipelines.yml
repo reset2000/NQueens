@@ -33,6 +33,40 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
+stages:
+- stage: Build
+  displayName: Build Cars App
+  jobs:
+  - job: Build
+    displayName: Build job
+    pool:
+      vmImage: 'windows-latest'
+    variables:
+      solution: '**/*.sln'
+      buildPlatform: 'x86'
+    steps:
+    - task: NuGetToolInstaller@1
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '$(solution)'
+    - task: VSBuild@1
+      inputs:
+        solution: '$(solution)'
+        msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+    - task: VSTest@2
+      inputs:
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+    - task: CopyFiles@2
+      inputs:
+        contents: '**\$(BuildConfiguration)\**\?(*.exe|*.dll|*.pdb)' 
+        targetFolder: $(Build.ArtifactStagingDirectory)
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)
+        artifactName: CarProjectArtifacts
 - stage: Dev
   displayName: Deploy to the dev environment
   dependsOn: Build
